@@ -35,7 +35,7 @@ def on_message(client, userData, message):
         result = round( (((9.0/5.0) * T) - (0.55 * (1.0-RH) * (((9.0/5.0) * T) - 26.0)) + 32.0), 2)
         
         #print Data & Result
-        print "Temperature : " + str(T)i
+        print "Temperature : " + str(T)
         print "Heumidity : " + str(RH*100)
         print "Discomfort Index : " + str(result),
         #Check Level
