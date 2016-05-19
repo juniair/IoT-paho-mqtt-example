@@ -3,8 +3,7 @@ import dht11
 import time
 import datetime
 
-# GPIO 핀 정의 및 데이터 초기화
-
+# GPIO 핀 정의 및 데이터 초기
 trig_pin = 13
 echo_pin = 19
 # GREEN LED PIN: 16
