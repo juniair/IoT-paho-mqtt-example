@@ -7,14 +7,19 @@ import datetime
 instance = dht11.DHT11(pin = 12)
 result = None
 
+#GPIO 핀 설정
 def init_gpio():
     gpio.setwarnings(False)
     gpio.setmode(gpio.BCM)
 
+#온도 센서 실행
 def run():
     global result
     result = instance.read()
-
+    """"
+         유효한 값이 들어온 경우 해당 온도를 출력하고 True를 반환하고
+         유효한 값이 없으면 False를 반환한다.
+    """"
     if result.is_valid():
         print "Last valid input: " + str(datetime.datetime.now())
         print "Temperature: %d C" % result.temperature

@@ -3,35 +3,63 @@ import dht11
 import time
 import datetime
 
+# GPIO 핀 정의 및 데이터 초기화
+
 trig_pin = 13
 echo_pin = 19
+# GREEN LED PIN: 16
+# YELLOW LED PIN: 16
+# RED LED PIN: 21
 LED = (16, 20, 21)
-instance = dht11.DHT11(pin = 12)
-#define distance
-distance = 0
-temperature = 0
+instance = None
+distance = None
+temperature = None
+
+# 함수 정의
+# GPIO 핀 초기화
 def init_gpio():
+    global instance
+    # setwarnings(False): 다른 시스템에서 사용시 warning 메시지 무시
     gpio.setwarnings(False)
+    
+    # 라즈베리파이 B+ 보드로 설정
     gpio.setmode(gpio.BCM)
+    
+    # 초음파 pin 설정
     gpio.setup(trig_pin, gpio.OUT)
+    gpio.setup(echo_pin, gpio.IN)
+    
+    # 온도/ 습도 핀 설정
+    instance = dht11.DHT11(pin = 12)
+    
+    # LED 핀 설정
     for pin in LED:
         gpio.setup(pin, gpio.OUT)
-    gpio.setup(echo_pin, gpio.IN)
-
-def set_blink(LED, pin):    
+    
+# LED 출력 설정 함수
+def set_blink(LED, values):
+    # 해당 LED에 맞는 value 값을 출력
     for index in range(0, 3):
-        gpio.output(LED[index], pin[index]);
-        
-def select_led(distance):
-    if distance >= 100.0:
-        set_blink(LED, (True, False, False))
-    elif 30.0 <= distance and distance < 100.0:
-        set_blink(LED, (False, True, False))
-    else:
-        set_blink(LED, (False, False, True))
-def is_temp(temp):
-    return temp < 22
+        gpio.output(LED[index], values[index]);
 
+# 초음파 거리에 따른 LED 출력값 선택 함수
+def select_led(distance):
+
+    
+    if distance >= 100.0: # 거리가 100cm 이상
+        # GREEN LED는 ON, 나머지는 OFF
+        set_blink(LED, (True, False, False))    
+    elif 30.0 <= distance and distance < 100.0: # 30cm이상 100cm 미만
+        # YELLOW LED는 ON, 나머지는 OFF
+        set_blink(LED, (False, True, False))
+    else:   # 30cm 미만
+        # RED LED는 ON, 나머지는 OFF
+        set_blink(LED, (False, False, True))
+# 온도 기준치 확인 함수        
+def is_temp(temp):
+    return temp <= 20
+
+#초음파 센서 동작 함수
 def run_wave():
     global distance
     gpio.output(trig_pin, False)
@@ -50,13 +78,23 @@ def run_wave():
     distance = pulse_dration * 17000
     distance = round(distance, 2)
 
+# 온도/습도 센서 동작 함수
 def run_temp():
     global temperature
     result = instance.read()
-    if result.is_valid():
+    
+    # 유효한 값 입력 확인
+    """ 
+         유효한 값이 들어오면 들어온 시간과 값을 출력한다.
+        이 때 해당 온도가 기준치 온도 이상인 경우 False를 반환 하고
+        이하인 경우 True 값을 반환한다.
+         유효한 값이 안들어 온 경우 최근에 들어온 온도 값으로 기준치 온도를
+         비교하여 True나 False를 반환한다. 
+    """
+    if result.is_valid(): # True
+        
         print "Last valid input: " + str(datetime.datetime.now())
         print "Temperature: %d C" % result.temperature
-        
         
         temperature = result.temperature
 
@@ -64,23 +102,24 @@ def run_temp():
             return True
         else:
             return False
-    else:
+    else: #False
         if is_temp(temperature):
             return True
         else:
             return False
 
         
-
+# GPIO 초기화
 init_gpio()
 
 try:
     while True:
-        run_wave()
-        if run_temp():
+        run_wave() # 초음파센서 값 읽기
+        if run_temp(): # 온도/습도 센서 결과에 따른 처리
             print "Distance:", distance, "cm"
-            select_led(distance)
-        else:
+            select_led(distance)    # 거리에 따른 LED 선택
+        else:   # 온도가 기준치 이상인 경우
+            # 모든 LED OFF
             set_blink(LED, (False, False, False))
 except KeyboardInterrupt:
     gpio.cleanup()

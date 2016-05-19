@@ -1,19 +1,20 @@
 import paho.mqtt.client as mqtt
 import RPi.GPIO as gpio
 import time
-import datetime
 
 distance = None
 trig_pin = 13
 echo_pin = 19
 
+# GPIO 핀 초기화
 def init_gpio():
     gpio.setwarnings(False)
     gpio.setmode(gpio.BCM)
     gpio.setup(trig_pin, gpio.OUT)
     gpio.setup(echo_pin, gpio.IN)
 
-
+# 초음파 센서 처리 함수
+# 예제와 동일
 def run():
     global distance
     gpio.output(trig_pin, False)
@@ -42,7 +43,13 @@ try:
     init_gpio()
     while True:
         run()
+        """
+             초음파 거리를 'environment.ultrasonic'이라는 topic으로
+             데이터를 전송한다.
+        """
         client.publish('environment/ultrasonic', distance)
+        
+        # 0.5동안 대기한다.
         time.sleep(0.5)
         
 except KeyboardInterrupt:
